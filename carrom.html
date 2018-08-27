@@ -1,0 +1,350 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Carromboard</title>
+</head>
+
+<body id="carrom">
+	<center><canvas id="myCanvas" height="500" width="500" style="border:1px solid;"></canvas></center>
+	
+<script type="text/javascript">
+		var canvas = document.getElementById('myCanvas');
+		var ctx = canvas.getContext('2d');
+		var carromSize=500;
+		var margin=15;
+		var holeRad=15;
+		var stripeSize=26;
+		var stripeDist=80;
+		var INTERVAL=20;
+		var stateChanged = true;
+		var inMotion = false;
+		var strikerSelected = false;
+		var directionSelected = false;
+		var powerSelected = false;
+		var motionVarInitialized = false;
+		var delX, delY, dx, dy, frictX, frictY, friction = 0.1;
+		
+		function drawCarromBoard() {
+		if(canvas.getContext){
+			
+			ctx.fillStyle = "#FFFFFF";	//Rectangle
+			ctx.fillRect(0,0,500,500);
+			ctx.fillStyle = "#8B4513";
+			ctx.fillRect(2,2,496,496);
+			ctx.fillStyle = "#DEB887";
+			ctx.fillRect(15,15,470,470);
+			
+			ctx.beginPath();	//4 black circles
+			ctx.fillStyle = "#000000";
+			ctx.moveTo(30,30);
+			ctx.arc(30,30,15,0,Math.PI*2,true);
+			ctx.moveTo(470,30);
+			ctx.arc(470,30,15,0,Math.PI*2,true);
+			ctx.moveTo(30,470);
+			ctx.arc(30,470,15,0,Math.PI*2,true);
+			ctx.moveTo(470,470);
+			ctx.arc(470,470,15,0,Math.PI*2,true);
+			ctx.fill();
+			
+			ctx.beginPath();	//8 circles on stripe
+			ctx.moveTo(113,80);
+			ctx.arc(100,80,13,0,Math.PI*2,true);
+			ctx.moveTo(93,100);
+			ctx.arc(80,100,13,0,Math.PI*2,true);
+			ctx.moveTo(413,80);
+			ctx.arc(400,80,13,0,Math.PI*2,true);
+			ctx.moveTo(93,400);
+			ctx.arc(80,400,13,0,Math.PI*2,true);
+			ctx.moveTo(113,420);
+			ctx.arc(100,420,13,0,Math.PI*2,true);
+			ctx.moveTo(433,100);
+			ctx.arc(420,100,13,0,Math.PI*2,true);
+			ctx.moveTo(413,420);
+			ctx.arc(400,420,13,0,Math.PI*2,true);
+			ctx.moveTo(433,400);
+			ctx.arc(420,400,13,0,Math.PI*2,true);
+			ctx.stroke();
+			
+			ctx.beginPath();	//8 red circles
+			ctx.fillStyle = "#FF0000";
+			ctx.moveTo(100,80);
+			ctx.arc(100,80,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(80,100);
+			ctx.arc(80,100,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(400,80);
+			ctx.arc(400,80,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(80,400);
+			ctx.arc(80,400,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(100,420);
+			ctx.arc(100,420,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(420,100);
+			ctx.arc(420,100,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(400,420);
+			ctx.arc(400,420,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.moveTo(420,400);
+			ctx.arc(420,400,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.lineWidth = 2;
+			ctx.moveTo(100,67);
+			ctx.lineTo(400,67);
+			ctx.moveTo(100,433);
+			ctx.lineTo(400,433);
+			ctx.moveTo(67,100);
+			ctx.lineTo(67,400);
+			ctx.moveTo(433,100);
+			ctx.lineTo(433,400);
+			ctx.stroke();
+			
+			ctx.lineWidth = 1;
+			ctx.moveTo(100,93);
+			ctx.lineTo(400,93);
+			ctx.moveTo(100,407);
+			ctx.lineTo(400,407);
+			ctx.moveTo(93,100);
+			ctx.lineTo(93,400);
+			ctx.moveTo(407,100);
+			ctx.lineTo(407,400);
+			
+			ctx.moveTo(60,60);
+			ctx.lineTo(168,168);
+			ctx.moveTo(440,60);
+			ctx.lineTo(332,168);
+			ctx.moveTo(60,440);
+			ctx.lineTo(168,332);
+			ctx.moveTo(440,440);
+			ctx.lineTo(332,332);
+			
+			ctx.moveTo(150,125);
+			ctx.arc(150,150,25,-Math.PI/2,Math.PI,false);
+			ctx.moveTo(350,125);
+			ctx.arc(350,150,25,-Math.PI/2,Math.PI*2,true);
+			ctx.moveTo(150,375);
+			ctx.arc(150,350,25,Math.PI/2,Math.PI,true);
+			ctx.moveTo(350,375);
+			ctx.arc(350,350,25,Math.PI/2,Math.PI*2,false);
+			
+			ctx.moveTo(310,250);
+			ctx.arc(250,250,60,0,Math.PI*2,true);
+			ctx.moveTo(300,250);
+			ctx.arc(250,250,50,0,Math.PI*2,true);
+			ctx.moveTo(265,250);
+			ctx.arc(250,250,15,0,Math.PI*2,true);
+			ctx.stroke();
+			
+			ctx.beginPath();
+			ctx.fillStyle = "#FF0000";
+			ctx.moveTo(260,250);
+			ctx.arc(250,250,10,0,Math.PI*2,true);
+			ctx.stroke();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.fillStyle = "#000000";
+			ctx.moveTo(60,60);
+			ctx.arc(60,60,2,0,Math.PI*2,true);
+			ctx.moveTo(60,440);
+			ctx.arc(60,440,2,0,Math.PI*2,true);
+			ctx.moveTo(440,60);
+			ctx.arc(440,60,2,0,Math.PI*2,true);
+			ctx.moveTo(440,440);
+			ctx.arc(440,440,2,0,Math.PI*2,true);
+			
+			ctx.moveTo(150,125);
+			ctx.arc(150,125,2,0,Math.PI*2,true);
+			ctx.moveTo(350,125);
+			ctx.arc(350,125,2,0,Math.PI*2,true);
+			ctx.moveTo(125,150);
+			ctx.arc(125,150,2,0,Math.PI*2,true);
+			ctx.moveTo(375,150);
+			ctx.arc(375,150,2,0,Math.PI*2,true);
+			ctx.moveTo(125,350);
+			ctx.arc(125,350,2,0,Math.PI*2,true);
+			ctx.moveTo(375,350);
+			ctx.arc(375,350,2,0,Math.PI*2,true);
+			ctx.moveTo(150,375);
+			ctx.arc(150,375,2,0,Math.PI*2,true);
+			ctx.moveTo(350,375);
+			ctx.arc(350,375,2,0,Math.PI*2,true);
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.rect(100,carromSize-margin,300,margin-2);
+			ctx.fillStyle = "#FF0000";
+			ctx.fill();
+			
+		}
+		else{
+			alert("Canvas not supported in your browser!");
+		}
+		}
+		
+		
+		function Coin(x,y,r,color){
+			this.x=x;
+			this.y=y;
+			this.r=r;
+			this.color = color;
+			this.draw = function draw() {
+				ctx.beginPath();
+				ctx.moveTo(this.x,this.y);
+				ctx.fillStyle = this.color;
+				ctx.arc(this.x,this.y,this.r,0,Math.PI*2,true);
+				ctx.stroke();
+				ctx.fill();
+				/*ctx.beginPath();
+				ctx.moveTo(this.x+this.r/2,this.y);
+				ctx.arc(this.x,this.y,this.r/2,0,Math.PI*2,true);
+				ctx.stroke();*/
+			}
+		}
+		
+		function Powerbar() {
+			this.x = 100;
+			this.force = 0;
+			this.draw = function draw() {
+				ctx.beginPath();
+				ctx.moveTo(this.x,carromSize);
+				ctx.lineTo(this.x,carromSize-margin);
+				ctx.lineWidth=7;
+				ctx.strokeStyle = "#FFFFFF";
+				ctx.stroke();
+				ctx.lineWidth=1;
+				ctx.strokeStyle = "#000000";
+			}
+		}
+		
+		function Direction(x,y) {
+			this.x = x;
+			this.y = y;
+			this.draw = function draw() {
+				ctx.beginPath();
+				ctx.moveTo(striker.x,striker.y);
+				ctx.lineTo(this.x,this.y);
+				ctx.lineWidth = 2;
+				ctx.stroke();
+			}
+		}
+		
+		function updateBoard() {
+			
+			if(stateChanged == true) {
+				
+				if(inMotion == true) {
+					if(motionVarInitialized == false) {
+						delX = Math.abs(direction.x - striker.x);
+						delY = Math.abs(direction.y - striker.y);
+						powerbar.force = 0.1*(powerbar.x - 100);
+						dx = powerbar.force*delX/(delX+delY);
+						dy = -powerbar.force*delY/(delX+delY);
+						frictX = friction*delX/(delX+delY);
+						frictY = -friction*delY/(delX+delY);
+						if(direction.x < striker.x) {
+							dx = -dx;
+							frictX = -frictX;
+						}
+						motionVarInitialized = true;
+					}
+					powerbar.force -= friction;
+					if(powerbar.force < 0) {
+						clearInterval(myVar);
+						/*stateChanged = false;
+						dx = 0;
+						dy = 0;
+						delX = 0;
+						delY = 0;
+						frictX = 0;
+						frictY = 0;
+						powerbar.force = 0;
+						friction = 0;*/
+					}
+					if((striker.x<margin+2*holeRad && (striker.y<margin+2*holeRad || striker.y>carromSize-margin-2*holeRad)) || (striker.x>carromSize-margin-2*holeRad && (striker.y<margin+2*holeRad || striker.y>carromSize-margin-2*holeRad))) {
+						alert("Striker is out of Game");
+						clearInterval(myVar);
+					}
+					if(striker.x+dx-frictX-striker.r<margin || striker.x+dx-frictX+striker.r>carromSize-margin) {
+						dx = -dx;
+						frictX = -frictX;
+					}
+					if(striker.y+dy-frictY-striker.r<margin || striker.y+dy-frictY+striker.r>carromSize-margin) {
+						dy = -dy;
+						frictY = -frictY;
+					}
+					dx -= frictX;
+					dy -= frictY;
+					striker.x += dx - frictX;
+					striker.y += dy - frictY;
+				}
+				
+				//ctx.clearRect(0,0,500,500);
+				drawCarromBoard();
+				striker.draw();
+				if(inMotion == false)
+					direction.draw();
+				powerbar.draw();
+				//stateChanged = false;
+			}
+			
+		}
+		
+		function mouseDown(event) {
+			var x = event.clientX-canvas.offsetLeft;
+			var y = event.clientY-canvas.offsetTop;
+			if(x<striker.x+striker.r && x>striker.x-striker.r && y<striker.y+striker.r && y>striker.y-striker.r)
+				strikerSelected = true;
+			else if(x>margin && x<carromSize-margin && y>margin && y<carromSize-margin)
+				directionSelected = true;
+			else if(x>100 && x<400 && y>carromSize-margin)
+				powerSelected = true;
+			stateChanged = true;
+		}
+		
+		function mouseMove(event) {
+			var x = event.clientX-canvas.offsetLeft;
+			var y = event.clientY-canvas.offsetTop;
+			if(strikerSelected==true && x>=100 && x<=400)
+				striker.x = x;
+			else if(directionSelected==true && x>margin && x<carromSize-margin && y>420 && y<carromSize-margin) {
+				var diffX = striker.x-x;
+				var diffY = striker.y-y;
+				direction.x = striker.x + 2*diffX;
+				direction.y = striker.y + 2*diffY;
+			}
+			else if(powerSelected==true && x>=100 && x<=400) {
+				powerbar.x = x;
+			}
+			stateChanged = true;
+		}
+		
+		function mouseUp() {
+			strikerSelected = false;
+			directionSelected = false;
+			if(powerSelected == true)
+				inMotion = true;
+			powerSelected = false;
+			stateChanged = true;
+		}
+		
+		var striker = new Coin(100,420,13,"#FFFFFF");
+		var powerbar = new Powerbar();
+		var direction = new Direction(striker.x,striker.y);
+		
+		canvas.onmousedown=mouseDown;
+		canvas.onmousemove=mouseMove;
+		canvas.onmouseup=mouseUp;
+		
+		var myVar = setInterval(updateBoard,INTERVAL);
+		
+</script>
+	
+</body>
+</html>
